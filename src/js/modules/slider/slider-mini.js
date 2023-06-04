@@ -70,30 +70,32 @@ export default class MiniSlider extends Slider {
     }
 
     init() {
-        this.container.style.cssText = `
+        try {
+            this.container.style.cssText = `
             display: flex;
             flex-wrap: wrap;
             overflow: hidden;
             align-items: flex-start;
-        `;
+            `;
 
-        this.bindTriggers();
-        this.decorizeSlides();
+            this.bindTriggers();
+            this.decorizeSlides();
 
-        if (this.autoplay) {
-            this.autoplayStart();
-
-            this.slides[0].parentNode.addEventListener('mouseleave', () => {
+            if (this.autoplay) {
                 this.autoplayStart();
-            });
 
-            this.next.addEventListener('mouseleave', () => {
-                clearInterval(autoplay);
-            });
-        
-            this.prev.addEventListener('mouseleave', () => {
-                clearInterval(autoplay);
-            });
-        }
+                this.slides[0].parentNode.addEventListener('mouseleave', () => {
+                    this.autoplayStart();
+                });
+
+                this.next.addEventListener('mouseleave', () => {
+                    clearInterval(autoplay);
+                });
+            
+                this.prev.addEventListener('mouseleave', () => {
+                    clearInterval(autoplay);
+                });
+            }
+        } catch(e) {}
     }
 }

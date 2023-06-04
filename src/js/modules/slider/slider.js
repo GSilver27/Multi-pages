@@ -7,7 +7,7 @@ export default class Slider {
         activeClass = '',
         autoplay } = {}) {
         this.container = document.querySelector(container);
-        this.slides = this.container.children; // получаем ноду
+        try {this.slides = this.container.children} catch(e) {}; // получаем ноду
         this.btns = document.querySelectorAll(btns);
         this.prev = document.querySelector(prev);
         this.next = document.querySelector(next);
