@@ -8,6 +8,9 @@ window.addEventListener('DOMContentLoaded', () => {
     const slider = new MainSlider({container: '.page', btns: '.next'});
     slider.render();
 
+    const modulePageSlider = new MainSlider({container: '.moduleapp', btns: '.next'});
+    modulePageSlider.render();
+
     const showUpSlider = new MiniSlider({
         container: '.showup__content-slider',
         prev: '.showup__prev',
@@ -17,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     showUpSlider.init();
 
-    const modulesSlider = new MiniSlider({
+    const moduleSlider = new MiniSlider({
         container: '.modules__content-slider',
         prev: '.modules__info-btns .slick-prev',
         next: '.modules__info-btns .slick-next',
@@ -25,7 +28,7 @@ window.addEventListener('DOMContentLoaded', () => {
         animate: true,
         autoplay: true
     });
-    modulesSlider.init();
+    moduleSlider.init();
 
     const feedSlider = new MiniSlider({
         container: '.feed__slider',
@@ -36,8 +39,8 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     feedSlider.init();
 
-    const player = new VideoPlayer('.showup .play', '.overlay');
-    player.init();
+    new VideoPlayer('.showup .play', '.overlay').init();
+    new VideoPlayer('.module__video-item .play', '.overlay').init();
 
     new Difference('.officerold', '.officernew', '.officer__card-item').init();
     new Form('.form').init();

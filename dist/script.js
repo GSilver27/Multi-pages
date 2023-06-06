@@ -1254,6 +1254,11 @@ window.addEventListener('DOMContentLoaded', () => {
     btns: '.next'
   });
   slider.render();
+  const modulePageSlider = new _modules_slider_slider_main__WEBPACK_IMPORTED_MODULE_0__["default"]({
+    container: '.moduleapp',
+    btns: '.next'
+  });
+  modulePageSlider.render();
   const showUpSlider = new _modules_slider_slider_mini__WEBPACK_IMPORTED_MODULE_1__["default"]({
     container: '.showup__content-slider',
     prev: '.showup__prev',
@@ -1262,7 +1267,7 @@ window.addEventListener('DOMContentLoaded', () => {
     animate: true
   });
   showUpSlider.init();
-  const modulesSlider = new _modules_slider_slider_mini__WEBPACK_IMPORTED_MODULE_1__["default"]({
+  const moduleSlider = new _modules_slider_slider_mini__WEBPACK_IMPORTED_MODULE_1__["default"]({
     container: '.modules__content-slider',
     prev: '.modules__info-btns .slick-prev',
     next: '.modules__info-btns .slick-next',
@@ -1270,7 +1275,7 @@ window.addEventListener('DOMContentLoaded', () => {
     animate: true,
     autoplay: true
   });
-  modulesSlider.init();
+  moduleSlider.init();
   const feedSlider = new _modules_slider_slider_mini__WEBPACK_IMPORTED_MODULE_1__["default"]({
     container: '.feed__slider',
     prev: '.feed__slider .slick-prev',
@@ -1278,8 +1283,8 @@ window.addEventListener('DOMContentLoaded', () => {
     activeClass: 'feed__item-active'
   });
   feedSlider.init();
-  const player = new _modules_playVideo__WEBPACK_IMPORTED_MODULE_2__["default"]('.showup .play', '.overlay');
-  player.init();
+  new _modules_playVideo__WEBPACK_IMPORTED_MODULE_2__["default"]('.showup .play', '.overlay').init();
+  new _modules_playVideo__WEBPACK_IMPORTED_MODULE_2__["default"]('.module__video-item .play', '.overlay').init();
   new _modules_difference__WEBPACK_IMPORTED_MODULE_3__["default"]('.officerold', '.officernew', '.officer__card-item').init();
   new _modules_forms__WEBPACK_IMPORTED_MODULE_4__["default"]('.form').init();
 });
@@ -1488,26 +1493,68 @@ class VideoPlayer {
     this.btns = document.querySelectorAll(triggers);
     this.overlay = document.querySelector(overlay);
     this.close = this.overlay.querySelector('.close');
+    this.onPlayerStateChange = this.onPlayerStateChange.bind(this);
   }
 
   createPlayer(url) {
     this.player = new YT.Player('frame', {
       height: '100%',
       width: '100%',
-      videoId: `${url}`
+      videoId: `${url}`,
+      events: {
+        'onStateChange': this.onPlayerStateChange
+      }
     });
-    console.log(this.player);
     this.overlay.style.display = 'flex';
   }
 
+  onPlayerStateChange(state) {
+    try {
+      const blockedElem = this.activeBtn.closest('.module__video-item').nextElementSibling;
+      const playBtn = this.activeBtn.querySelector('svg').cloneNode(true);
+
+      if (state.data === 0) {
+        if (blockedElem.querySelector('.play__circle').classList.contains('closed')) {
+          blockedElem.querySelector('.play__circle').classList.remove('closed');
+          blockedElem.querySelector('svg').remove();
+          blockedElem.querySelector('.play__circle').appendChild(playBtn);
+          blockedElem.querySelector('.play__text').textContent = 'play video';
+          blockedElem.querySelector('.play__text').classList.remove('attention');
+          blockedElem.style.opacity = 1;
+          blockedElem.style.filter = 'none';
+          blockedElem.setAttribute('data-disabled', 'false');
+        }
+      }
+    } catch (e) {}
+  }
+
   bindTriggers() {
-    this.btns.forEach(btn => {
+    this.btns.forEach((btn, i) => {
+      try {
+        const blockedElem = btn.closest('.module__video-item').nextElementSibling;
+
+        if (i % 2 == 0) {
+          blockedElem.setAttribute('data-disabled', 'true');
+        }
+      } catch (e) {}
+
       btn.addEventListener('click', () => {
-        if (document.querySelector('iframe#frame')) {
-          this.overlay.style.display = 'flex';
-        } else {
-          const path = btn.getAttribute('data-url');
-          this.createPlayer(path);
+        if (!btn.closest('.module__video-item') || btn.closest('.module__video-item').getAttribute('data-disabled') !== 'true') {
+          this.activeBtn = btn;
+
+          if (document.querySelector('iframe#frame')) {
+            this.overlay.style.display = 'flex';
+
+            if (this.path !== btn.getAttribute('data-url')) {
+              this.path = btn.getAttribute('data-url');
+              this.player.loadVideoById({
+                videoId: this.path
+              });
+            }
+          } else {
+            this.path = btn.getAttribute('data-url');
+            this.createPlayer(this.path);
+          }
         }
       });
     });
@@ -1521,12 +1568,14 @@ class VideoPlayer {
   }
 
   init() {
-    const tag = document.createElement('script');
-    tag.src = "https://www.youtube.com/iframe_api";
-    const firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-    this.bindTriggers();
-    this.bindCloseBtn();
+    if (this.btns.length > 0) {
+      const tag = document.createElement('script');
+      tag.src = "https://www.youtube.com/iframe_api";
+      const firstScriptTag = document.getElementsByTagName('script')[0];
+      firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+      this.bindTriggers();
+      this.bindCloseBtn();
+    }
   }
 
 }
@@ -1585,24 +1634,42 @@ class MainSlider extends _slider__WEBPACK_IMPORTED_MODULE_0__["default"] {
     this.showSlides(this.slideIndex += n);
   }
 
+  bindTriggers() {
+    this.btns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.plusSlides(1);
+      });
+      btn.parentNode.previousElementSibling.addEventListener('click', e => {
+        e.preventDefault();
+        this.slideIndex = 1;
+        this.showSlides(this.slideIndex);
+      });
+    });
+    document.querySelectorAll('.prevmodule').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.plusSlides(-1);
+      });
+    });
+    document.querySelectorAll('.nextmodule').forEach(item => {
+      item.addEventListener('click', e => {
+        e.stopPropagation();
+        e.preventDefault();
+        this.plusSlides(1);
+      });
+    });
+  }
+
   render() {
-    try {
+    if (this.container) {
       try {
         this.handson = document.querySelector('.hanson');
       } catch (e) {}
 
-      this.btns.forEach(btn => {
-        btn.addEventListener('click', () => {
-          this.plusSlides(1);
-        });
-        btn.parentNode.previousElementSibling.addEventListener('click', e => {
-          e.preventDefault();
-          this.slideIndex = 1;
-          this.showSlides(this.slideIndex);
-        });
-      });
       this.showSlides(this.slideIndex);
-    } catch (e) {}
+      this.bindTriggers();
+    }
   }
 
 }
